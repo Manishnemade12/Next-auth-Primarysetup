@@ -15,6 +15,7 @@
     "aos": "^2.3.4",
     "axios": "^1.7.7",
     "backend_port": "file:",
+    "bcrypt": "^5.1.1",
     "chart.js": "^4.4.5",
     "cloudinary": "^2.5.1",
     "cloudinary-react": "^1.8.1",

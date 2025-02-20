@@ -1,20 +1,17 @@
+// pages/auth/signup.js
 
-// import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function SignUp() {
-    const [form, setForm] = useState({ email: '', password: '', confirmPassword: '' });
+    const [form, setForm] = useState({
+        name: '',
+        email: '',
+        password: '',
+    });
     const [error, setError] = useState('');
-    // const {data: session, status} = useSession()   
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
-
-    // useEffect(() => {
-    //     if (status === 'authenticated') {
-    //         router.push('/'); 
-        
-    //  }
-    // }, [status, router]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -22,61 +19,69 @@ export default function SignUp() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setError('');
 
-        if (form.password !== form.confirmPassword) {
-            setError('Passwords do not match!');
-            return;
+        try {
+            const res = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ users: [form] }), // ✅ Wrap form in 'users' array
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                router.push('/auth/signin'); // ✅ Redirect on success
+            } else {
+                setError(data.message || 'Error occurred during signup.');
+            }
+        } catch (err) {
+            setError('Signup failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
-
-        const res = await fetch(`/api/auth/signup`, {   
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(form),
-        });
-
-        const data = await res.json();
-        if (data.error) {
-            setError('Error occurred during signup');
-            setTimeout(() => {
-                setError(''); // Clear the error after 3 seconds
-            }, 3000);
-        } else {
-            setError(''); // Clear the error on successful signup
-            router.push('/auth/signin');
-        }
-        
     };
 
     return (
         <div className="flex flex-center full-h">
             <div className="loginform">
-                <div className="heading">Signup - Create Admin</div>
+                <div className="heading">Sign Up - Create User</div>
+                {loading && <p>Loading...</p>}
                 <form className="form" onSubmit={handleSubmit}>
-                    <input 
-                        type="email" 
-                        name="email" 
-                        className="input"  
-                        placeholder="Enter your email" 
-                        onChange={handleChange} 
+                    <input
+                        type="text"
+                        name="name"
+                        className="input"
+                        placeholder="Enter your name"
+                        value={form.name}
+                        onChange={handleChange}
+                        required
                     />
-                    <input 
-                        type="password" 
-                        name="password" 
-                        className="input"  
-                        placeholder="Enter password" 
-                        onChange={handleChange} 
+                    <input
+                        type="email"
+                        name="email"
+                        className="input"
+                        placeholder="Enter your email"
+                        value={form.email}
+                        onChange={handleChange}
+                        required
                     />
-                    <input 
-                        type="password" 
-                        name="confirmPassword" 
-                        className="input"  
-                        placeholder="Enter confirm password" 
-                        onChange={handleChange} 
+                    <input
+                        type="password"
+                        name="password"
+                        className="input"
+                        placeholder="Enter password"
+                        value={form.password}
+                        onChange={handleChange}
+                        required
                     />
-                    <button className="login-button" type="submit">Sign Up</button>
-                    {error && <p>{error}</p>}
+                    <button className="login-button" type="submit" disabled={loading}>
+                        {loading ? 'Signing Up...' : 'Sign Up'}
+                    </button>
+                    {error && <p className="error">{error}</p>}
                 </form>
             </div>
         </div>

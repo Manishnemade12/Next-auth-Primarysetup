@@ -1,54 +1,40 @@
-
-
-// import { mongooseConnect } from "@/lib/mongoose";
-// import { Profile } from "@/models/Profile";
-
-// export default async function handler(req, res) {
-//     await mongooseConnect();
-
-//     const { email, password } = req.body;
-    
-
-//     try {
-//         // Check if the user exists
-//         const existingUser = await Profile.findOne({ email });
-
-//         if (existingUser) {
-//             return res.status(400).json({ error: 'user already exist' });
-
-//         } else {
-//             return res.status(404).json({ message: 'User not found' });
-//         }
-
-//         const newuser
-//     } catch (error) {
-//         console.error(error);
-//         return res.status(500).json({ message: 'Internal Server Error' });
-//     }
-// }
 import { mongooseConnect } from "@/lib/mongoose";
-import { Profile } from "@/models/Profile";
+import { User } from "@/models/User";
+import bcrypt from "bcrypt";
 
 export default async function handler(req, res) {
-    await mongooseConnect();
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
 
-    const { email, password } = req.body;
+  await mongooseConnect();
+  const { users } = req.body;
 
- 
-    try {
-        // Check if the user already exists
-        const existingUser = await Profile.findOne({ email });
+  if (!Array.isArray(users) || users.length === 0) {
+    return res.status(400).json({ message: "Users array is required." });
+  }
 
-        if (existingUser) {
-            return res.status(400).json({ error: 'User already exists' });
-        }
+  try {
+    const createdUsers = [];
 
+    for (const { name, email, password } of users) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        console.log(`User with email ${email} already exists.`);
+        continue; // Skip existing users
+      }
 
-        const newUser = await Profile.create({ email,password });
-
-        return res.status(201).json({ message: 'User created successfully', user: newUser });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Internal Server Error' });
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = await User.create({ name, email, password: hashedPassword });
+      createdUsers.push(newUser);
     }
+
+    return res.status(201).json({
+      message: `${createdUsers.length} user(s) created successfully.`,
+      users: createdUsers,
+    });
+  } catch (error) {
+    console.error("Signup Error:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 }
