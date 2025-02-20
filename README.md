@@ -14,8 +14,8 @@ This repository provides a comprehensive starter template for a **Next.js** proj
 
 ### 1. **Clone the Repository**
 ```bash
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
+git clone https://github.com/Manishnemade12/Next-auth-Primarysetup.git
+cd Next-auth-Primarysetup
 ```
 
 ### 2. **Install Dependencies**
